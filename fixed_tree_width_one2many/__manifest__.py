@@ -28,6 +28,9 @@
     'data': [
 
     ],
+    'images': [
+        'static/description/icon.png',
+    ],
     'assets': {
         'web.assets_backend': [
             'fixed_tree_width_one2many/static/src/js/custom_width_tree.js',
