@@ -1,0 +1,83 @@
+<templates xml:space="preserve">
+
+    <t t-inherit="web.ControlPanel.Regular" t-inherit-mode="extension">
+        <xpath expr="//div[contains(@class, 'o_cp_bottom')]/div[2]/t/div[contains(@class, 'o_search_options')]"
+               position="inside">
+             <div class="o_group_by_menu btn-group o-dropdown--no-caret">
+                 <button class="btn btn-light" t-on-click="toggleSearch"><i class="fa fa-search"/>
+                     Tìm kiếm nâng cao</button>
+             </div>
+        </xpath>
+    </t>
+
+    <t t-inherit="web.ControlPanel" t-inherit-mode="extension">
+        <xpath expr="//div[contains(@class, 'o_control_panel')]"
+               position="inside">
+            <div class="card" id="search_advanced_body" style="display: none">
+            <div class="card-header">
+                <i class="fa fa-search"/>
+                Tìm kiếm nâng cao
+            </div>
+                <div class="card-body">
+                <div class="row">
+                    <t t-foreach="getFieldSearch" t-as="field" t-key="field.id">
+                        <SearchAdvanced t-props="fieldProps(field)"/>
+                    </t>
+                </div>
+                    <a href="#" t-on-click="onClickSearchAdvanced" class="btn btn-primary">Tìm kiếm</a>
+                    <a href="#" t-on-click="onClickRemove" class="btn btn-secondary">Xóa điều kiện</a>
+            </div>
+        </div>
+
+        </xpath>
+    </t>
+
+    <t t-name="SearchAdvancedFormView" owl="1">
+        <div class="col-md-3">
+            <span class="" id="basic-addon3">
+                    <t t-esc="props.fieldDescription"/>
+            </span>
+            <div class="mb-3"
+                 t-att-class="(props.fieldType == 'date' or  props.fieldType == 'datetime') ? 'no_border': 'search_advanced'">
+                <input t-if="props.fieldType == 'char'" type="text"
+                       t-att-data-id="props.id" t-att-data-field="props.fieldName" t-on-keyup="_updateInputValue"
+                       class="form-control o_input"/>
+
+                <div t-if="props.fieldType == 'date'" class="date_format">
+                    <DatePicker
+                            inputId="props.fieldName"
+                            date="propertyValue"
+                            onDateTimeChanged.bind="onValueChangeFrom"
+                    />
+                    <span>Đến</span>
+                    <DatePicker
+                            inputId="props.fieldName"
+                            date="propertyValue"
+                            onDateTimeChanged.bind="onValueChangeTo"
+                    />
+                </div>
+                <div t-if="props.fieldType == 'datetime'" class="date_format">
+                    <DateTimePicker
+                            inputId="props.fieldName"
+                            date="propertyValue"
+                            onDateTimeChanged.bind="onValueChangeFrom"
+                    />
+                    <span>Đến</span>
+                    <DateTimePicker
+                            inputId="props.fieldName"
+                            date="propertyValue"
+                            onDateTimeChanged.bind="onValueChangeTo"
+                    />
+                </div>
+                <div class="">
+                    <TagsList tags="tags"/>
+                    <AutoComplete id="props.fieldName"
+                                        t-if="['many2one', 'one2many', 'selection'].includes(props.fieldType)"
+                                        value="''"
+                                        input="inputRef" sources="sources" placeholder="'Nhập gì đó...'"
+                                        onSelect.bind="onSelect" t-on-input="onChangeSearchField"/>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

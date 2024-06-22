@@ -1,0 +1,34 @@
+.search_advanced {
+  .o_tag {
+    height: 20px;
+
+    .o_tag_badge_text {
+      width: 70px;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .o_delete {
+    font-size: 14px;
+  }
+
+  .form-control {
+    :hover {
+      border: none;
+      box-shadow: none;
+    }
+  }
+  input {
+    border-bottom: 1px solid #ced4da;
+  }
+}
+
+.date_format {
+  display: inline-flex;
+  border-bottom: none;
+  width: 100%;
+  justify-content: space-between;
+}
