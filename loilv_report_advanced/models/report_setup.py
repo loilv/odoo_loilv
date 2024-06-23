@@ -3,7 +3,18 @@ import xml.etree.ElementTree as ET
 
 from odoo.modules import get_resource_path
 
-FIELD_TYPES = [(key, key) for key in sorted(fields.Field.by_type)]
+FIELD_TYPES = [
+    ('char', 'char'),
+    ('integer', 'integer'),
+    ('float', 'float'),
+    ('boolean', 'boolean'),
+    ('text', 'text'),
+    ('date', 'date'),
+    ('datetime', 'datetime'),
+    ('selection', 'selection'),
+    ('many2one', 'many2one'),
+    ('many2many', 'many2many')
+]
 
 
 class LoiLVReportSetup(models.Model):
@@ -102,7 +113,7 @@ class LoiLVReportSetup(models.Model):
                 'required': param.required,
                 'relation': param.relation,
                 'domain': param.domain,
-
+                'selection_ids': [(0, 0, {'value': s.name, 'name': s.display}) for s in param.selection_ids]
             }))
         params += [
             (0, 0, {
@@ -215,16 +226,26 @@ class LoiLVReportSetupParameter(models.Model):
     _description = 'Cấu hình đầu vào báo cáo'
 
     report_id = fields.Many2one('loilv.report.list')
-    name = fields.Char(string='Tên trường')
-    description = fields.Char(string='Mô tả trường')
+    name = fields.Char(string='Tên trường', required=True)
+    description = fields.Char(string='Mô tả trường', required=True)
     ttype = fields.Selection(selection=FIELD_TYPES, string='Kiểu dữ liệu', required=True)
     relation = fields.Char(string='Tên model quan hệ')
-    domain = fields.Char(string='Tên miền', default="[]")
+    domain = fields.Char(string='Tên miền')
     many2many_model = fields.Char(string='Bảng trung gian')
     column_1 = fields.Char(string='Cột 1')
     column_2 = fields.Char(string='Cột 2')
-    group = fields.Selection([('1', 'Hiển thị trái'), ('2', 'Hiển thị phải')], string='Cách hiển thị')
+    group = fields.Selection([('1', 'Hiển thị trái'), ('2', 'Hiển thị phải')], string='Cách hiển thị', required=True)
     required = fields.Boolean(string='Bắt buộc', default=False)
+    selection_ids = fields.One2many("loilv.report.setup.parameter.selection", "setup_id", string="Danh sách lựa chọn", copy=True)
+
+
+class SelectionSetup(models.Model):
+    _name = 'loilv.report.setup.parameter.selection'
+    _description = 'Cấu hình đầu vào báo cáo'
+
+    setup_id = fields.Many2one('loilv.report.setup.parameter')
+    name = fields.Char(string='Tên')
+    display = fields.Char(string='Tên hiển thị')
 
 
 class LoiLVReportResponseSetup(models.Model):

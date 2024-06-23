@@ -18,7 +18,11 @@ class LoilvBaseReport(models.AbstractModel):
         variables = re.findall(pattern, query_string)
         params = {}
         for v in variables:
-            if record._fields[f'x_{v}'].type in ('many2one'):
+            if v == 'current_user':
+                params.update({v: self.env.user.id})
+            elif v == 'current_company':
+                params.update({v: self.env.company.id})
+            elif record._fields[f'x_{v}'].type in ('many2one'):
                 if record[f'x_{v}'].id:
                     params.update({v: record[f'x_{v}'].id})
             elif record._fields[f'x_{v}'].type in ('one2many', 'many2many'):

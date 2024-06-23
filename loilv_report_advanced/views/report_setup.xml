@@ -30,7 +30,7 @@
             <field name="model">loilv.report.list</field>
             <field name="arch" type="xml">
                 <form string="loilv_report_list_view_form">
-                    <field name="query_string"/>
+                    <field name="query_string" style="font-size: 20px"/>
                 </form>
             </field>
         </record>
@@ -40,7 +40,7 @@
             <field name="model">loilv.report.list</field>
             <field name="arch" type="xml">
                 <form string="loilv_report_list_view_form">
-                    <field name="title_json" widget="ace" options="{'mode': 'python'}"/>
+                    <field name="title_json" widget="ace" options="{'mode': 'python'}" style="font-size: 20px"/>
                 </form>
             </field>
         </record>
@@ -86,6 +86,12 @@
                                                 <field name="many2many_model" attrs="{'invisible': [('ttype', '!=', 'many2many')]}"/>
                                                 <field name="column_1" attrs="{'invisible': [('ttype', '!=', 'many2many')]}"/>
                                                 <field name="column_2" attrs="{'invisible': [('ttype', '!=', 'many2many')]}"/>
+                                                <field name="selection_ids" attrs="{'invisible': [('ttype', '!=', 'selection')]}">
+                                                    <tree editable="bottom">
+                                                        <field name="name"/>
+                                                        <field name="display"/>
+                                                    </tree>
+                                                </field>
                                                 <field name="group"/>
                                             </group>
                                         </sheet>
