@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "Report Advanced LOILV",
+    'name': "Report Advanced",
 
     'summary': """Giúp tạo báo cáo thuận tiện hơn""",
 
@@ -26,9 +26,9 @@
     ],
     'assets': {
         'web.assets_backend': [
-            'forlife_report_advanced/static/src/xml/**/*',
-            'forlife_report_advanced/static/src/css/**/*',
-            'forlife_report_advanced/static/src/js/**/*',
+            'loilv_report_advanced/static/src/xml/**/*',
+            'loilv_report_advanced/static/src/css/**/*',
+            'loilv_report_advanced/static/src/js/**/*',
 
         ]
     }

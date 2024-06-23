@@ -24,14 +24,15 @@ class LoilvBaseReport(models.AbstractModel):
             elif record._fields[f'x_{v}'].type in ('one2many', 'many2many'):
                 if record[f'x_{v}'].id:
                     params.update({v: record[f'x_{v}'].ids})
+            elif record._fields[f'x_{v}'].type in ('boolean'):
+                params.update({v: record[f'x_{v}']})
             else:
                 params.update({v: str(record[f'x_{v}'])})
 
         where_match = re.search(r'\{where:\[(.*?)\]\}', query_string, re.DOTALL)
         if where_match:
             where_clause = where_match.group(1)
-
-            conditions = re.findall(r"'(.*?)'", where_clause)
+            conditions = where_clause.split(',')
             final_conditions = []
             for condition in conditions:
                 condition_pattern = r'\{(\w+)\}'
@@ -51,6 +52,8 @@ class LoilvBaseReport(models.AbstractModel):
                                 value = value
                             else:
                                 value = f"'{value[0]}'"
+                        if isinstance(value, bool):
+                            value = str(value).lower()
                         new_condition = new_condition.replace(placeholder, str(value))
                 if re.search(r'\{(\w+)\}', new_condition, re.DOTALL):
                     continue
@@ -69,10 +72,10 @@ class LoilvBaseReport(models.AbstractModel):
             data = [x for x in self._cr.dictfetchall()]
             return data
         else:
-            print("Không tìm thấy phần where")
+            self._cr.execute(query_string)
+            data = [x for x in self._cr.dictfetchall()]
+            return data
 
-    def preview_excel(self):
-        pass
 
     def get_excel_file(self, res_model, res_id):
         record = self.env[res_model].browse(int(res_id))
@@ -110,10 +113,15 @@ class LoilvBaseReport(models.AbstractModel):
     def preview_excel_to_html(self, res_model, res_id):
         record = self.env[res_model].browse(int(res_id))
         data = self.data_export_excel(record)
+        if not data:
+            return []
+        key_data = list(data[-1].keys())
         result = [list(d.values()) for d in data]
+        headers = []
         titles = json.loads(self.env[record.x_res_model].browse(int(record.x_res_id)).title_json)
-        titles = list(titles.values())
-        return [titles, result]
+        for k in key_data:
+            headers.append(titles.get(k, k))
+        return [headers, result]
 
     @api.model
     def get_format_workbook(self, workbook):

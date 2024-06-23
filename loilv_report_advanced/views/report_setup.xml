@@ -137,15 +137,16 @@
         </record>
 
         <!-- This Menu Item will appear in the Upper bar, That's why It needs NO parent or action -->
-        <menuitem id="loilv_report_setup_list" name="Báo cáo" sequence="0"/>
+<!--        <menuitem id="loilv_report_setup_list" name="Báo cáo" sequence="0"/>-->
         <!-- This Menu Item must have a parent and an action -->
-        <menuitem id="loilv_setup_report" name="Cấu hình báo cáo" parent="loilv_report_setup_list"
+        <menuitem id="loilv_setup_report" name="Cấu hình báo cáo" parent="forlife_report.report_menu"
                   action="loilv_report_list_action" sequence="1"/>
 
         <menuitem id="loilv_setup_report_public_root"
                   name="Danh sách báo cáo"
-                  parent="loilv_report_setup_list"
+                  parent="forlife_report.report_menu"
                   sequence="2"
         />
+<!--        forlife_report.report_menu-->
     </data>
 </odoo>

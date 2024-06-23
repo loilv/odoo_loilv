@@ -30,17 +30,25 @@ class LoiLVReportSetup(models.Model):
 
     def create_view_from_xml(self):
         ir_view = self.env['ir.ui.view']
-        path = get_resource_path('forlife_report_advanced', 'data', 'xml_default.txt')
+        path = get_resource_path('loilv_report_advanced', 'data', 'xml_default.txt')
         with open(path, 'r', encoding='utf-8') as file:
             xml_string = file.read()
         xml_string_from_tree = xml_string
         string_left = ''
         string_right = ''
         for param in self.setup_params:
-            field_str = """
-                <field name="x_%s" %s/>
-                """ % (
-            param.name, "widget='many2many_tags' options=\"{'no_create': True}\"" if param.ttype == 'many2many' else '')
+            if param.ttype == 'many2many':
+                field_str = """
+                <field name="x_%s" widget='many2many_tags' options=\"{'no_create': True}\"/>
+                """ % (param.name)
+            elif param.ttype == 'many2one':
+                field_str = """
+                <field name="x_%s" options=\"{'no_create': True}\"/>
+                """ % (param.name)
+            else:
+                field_str = """
+                <field name="x_%s"/>
+                """ % (param.name)
 
             if param.group == '1':
                 string_left += field_str
@@ -77,7 +85,7 @@ class LoiLVReportSetup(models.Model):
 
         menu = self.env['ir.ui.menu'].create({
             'name': self.name,
-            'parent_id': self.env.ref('forlife_report_advanced.loilv_setup_report_public_root').id,
+            'parent_id': self.env.ref('loilv_report_advanced.loilv_setup_report_public_root').id,
             'action': 'ir.actions.act_window,{}'.format(ir_action.id),
         })
         self.menu_id = menu.id
@@ -93,6 +101,7 @@ class LoiLVReportSetup(models.Model):
                 'ttype': param.ttype,
                 'required': param.required,
                 'relation': param.relation,
+                'domain': param.domain,
 
             }))
         params += [
@@ -185,7 +194,7 @@ class LoiLVReportSetup(models.Model):
             'res_model': self._name,
             'res_id': self.id,
             'view_mode': 'form',
-            'views': [(self.env.ref('forlife_report_advanced.loilv_report_list_view_view_form_query').id, 'form')],
+            'views': [(self.env.ref('loilv_report_advanced.loilv_report_list_view_view_form_query').id, 'form')],
             'target': 'current',
         }
 
@@ -196,7 +205,7 @@ class LoiLVReportSetup(models.Model):
             'res_model': self._name,
             'res_id': self.id,
             'view_mode': 'form',
-            'views': [(self.env.ref('forlife_report_advanced.loilv_report_list_view_view_form_json').id, 'form')],
+            'views': [(self.env.ref('loilv_report_advanced.loilv_report_list_view_view_form_json').id, 'form')],
             'target': 'current',
         }
 
@@ -210,7 +219,7 @@ class LoiLVReportSetupParameter(models.Model):
     description = fields.Char(string='Mô tả trường')
     ttype = fields.Selection(selection=FIELD_TYPES, string='Kiểu dữ liệu', required=True)
     relation = fields.Char(string='Tên model quan hệ')
-    domain = fields.Char(string='Tên miền')
+    domain = fields.Char(string='Tên miền', default="[]")
     many2many_model = fields.Char(string='Bảng trung gian')
     column_1 = fields.Char(string='Cột 1')
     column_2 = fields.Char(string='Cột 2')

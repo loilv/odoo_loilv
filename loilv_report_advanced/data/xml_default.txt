@@ -14,7 +14,7 @@
             <a t-on-click="previewData" class="btn btn-secondary preview-excel-js"><i class="fa fa-bar-chart"/> Xem Trước</a>
         </div>
     </sheet>
-    <div class="container-fluid">
-        <table id="table-preview" class="display"></table>
+    <div class="container-fluid wrapper-table-preview">
+        <table id="table-preview" class="display table-responsive"></table>
     </div>
 </form>

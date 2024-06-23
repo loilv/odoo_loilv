@@ -1,17 +1,12 @@
 /** @odoo-module **/
 import {FormRenderer} from "@web/views/form/form_renderer";
-import {FormController} from "@web/views/form/form_controller";
-import {loadJS, loadCSS} from "@web/core/assets";
+import {loadJS} from "@web/core/assets";
 
 const Dialog = require('web.Dialog');
 import {formView} from '@web/views/form/form_view';
 import {registry} from "@web/core/registry"
 
 const {useRef, onPatched, onMounted, useState, onWillStart} = owl;
-
-export class LoilvReportAdvancedController extends FormController {
-
-}
 
 export class LoilvReportAdvancedRenderer extends FormRenderer {
     setup() {
@@ -21,7 +16,7 @@ export class LoilvReportAdvancedRenderer extends FormRenderer {
         })
         this.dataTable = null
         onWillStart(() =>
-            loadJS("/forlife_report_advanced/static/src/libs/datatables.min.js")
+            loadJS("/loilv_report_advanced/static/src/libs/datatables.min.js")
         );
     }
 
@@ -47,6 +42,10 @@ export class LoilvReportAdvancedRenderer extends FormRenderer {
             success: async function (data) {
                 self.env.services.ui.unblock();
                 const result = JSON.parse(data)
+                if (Array.isArray(result) && result.length === 0 && self.dataTable) {
+                    self.dataTable.clear().draw();
+                    return true
+                }
                 if (self.dataTable) {
                     self.dataTable.clear().draw();
                     self.dataTable.rows.add(result[1]).draw()
@@ -111,7 +110,6 @@ export class LoilvReportAdvancedRenderer extends FormRenderer {
 
 export const JsClassExportExcel = {
     ...formView,
-    Renderer: LoilvReportAdvancedRenderer,
-    Controller: LoilvReportAdvancedController
+    Renderer: LoilvReportAdvancedRenderer
 };
 registry.category("views").add("loilv_report_advanced_form", JsClassExportExcel);
