@@ -13,72 +13,90 @@ class LoilvBaseReport(models.AbstractModel):
     _description = 'loilv.base.report'
 
     def data_export_excel(self, record):
-        query_string = self.env[record.x_res_model].browse(int(record.x_res_id)).query_string
-        pattern = r'\{(\w+)\}'
-        variables = re.findall(pattern, query_string)
-        params = {}
-        for v in variables:
-            if v == 'current_user':
-                params.update({v: self.env.user.id})
-            elif v == 'current_company':
-                params.update({v: self.env.company.id})
-            elif record._fields[f'x_{v}'].type in ('many2one'):
-                if record[f'x_{v}'].id:
-                    params.update({v: record[f'x_{v}'].id})
-            elif record._fields[f'x_{v}'].type in ('one2many', 'many2many'):
-                if record[f'x_{v}'].id:
-                    params.update({v: record[f'x_{v}'].ids})
-            elif record._fields[f'x_{v}'].type in ('boolean'):
-                params.update({v: record[f'x_{v}']})
+        try:
+            query_string = self.env[record.x_res_model].browse(int(record.x_res_id)).query_string
+            pattern = r'\{(\w+)\}'
+            variables = re.findall(pattern, query_string)
+            variables = list(set(variables))
+            params = {}
+            for v in variables:
+                if v == 'current_user':
+                    params.update({v: self.env.user.id})
+                elif v == 'current_company':
+                    params.update({v: self.env.company.id})
+                elif record._fields[f'x_{v}'].type in ('many2one'):
+                    if record[f'x_{v}'].id:
+                        params.update({v: record[f'x_{v}'].id})
+                elif record._fields[f'x_{v}'].type in ('one2many', 'many2many'):
+                    if record[f'x_{v}'].id:
+                        params.update({v: record[f'x_{v}'].ids})
+                elif record._fields[f'x_{v}'].type in ('boolean'):
+                    params.update({v: record[f'x_{v}']})
+                else:
+                    params.update({v: str(record[f'x_{v}'])})
+
+            # Biểu thức chính quy để tìm các phần {where: [...]}
+            where_pattern = re.compile(r"{where:\s*\[([^]]+)\]}")
+
+            # Tìm tất cả các phần {where: [...]}
+            where_clauses = where_pattern.findall(query_string)
+            if where_clauses:
+                list_where = []
+                for idx, clause in enumerate(where_clauses, start=1):
+                    # print(f"Where Clause {idx}:\n{clause.strip()}\n")
+                    where_match = clause
+                    # where_match = re.search(r'\{where:\[(.*?)\]\}', query_string, re.DOTALL)
+                    if where_match:
+                        where_clause = where_match
+                        split_pattern = r',\s*(?![^()]*\))'
+                        conditions = re.split(split_pattern, where_clause)
+                        final_conditions = []
+                        for condition in conditions:
+                            condition_pattern = r'\{(\w+)\}'
+                            condition_variables = re.findall(condition_pattern, condition)
+                            new_condition = condition
+                            for key, value in params.items():
+                                if key not in condition_variables or value in ('False', 'None'):
+                                    continue
+                                if isinstance(value, list):
+                                    new_condition = new_condition.replace(f"={{{key}}}", f' = any(array{{{key}}})')
+                                placeholder = f'{{{key}}}'
+                                if placeholder in condition:
+                                    if isinstance(value, str):
+                                        value = value.split(',')
+                                        if len(value) > 1:
+                                            new_condition = new_condition.replace(f"={{{key}}}", f' like any(array{{{key}}})')
+                                            value = value
+                                        else:
+                                            value = f"{value[0]}"
+                                    if isinstance(value, bool):
+                                        value = str(value).lower()
+                                    new_condition = new_condition.replace(placeholder, str(value))
+                            if re.search(r'\{(\w+)\}', new_condition, re.DOTALL):
+                                continue
+                            if not new_condition or new_condition == '':
+                                continue
+                            final_conditions.append(new_condition)
+
+                        # Tạo phần where mới nếu có điều kiện
+                        if final_conditions:
+                            where_string = "where " + " and ".join(list(set(final_conditions)))
+                        else:
+                            where_string = ""
+
+                        where_source = "{where:[" + clause + "]}"
+                        query_string = query_string.replace(where_source, where_string)
+                        list_where.append(where_string)
+
+                self._cr.execute(query_string)
+                data = [x for x in self._cr.dictfetchall()]
+                return data
             else:
-                params.update({v: str(record[f'x_{v}'])})
-
-        where_match = re.search(r'\{where:\[(.*?)\]\}', query_string, re.DOTALL)
-        if where_match:
-            where_clause = where_match.group(1)
-            conditions = where_clause.split(',')
-            final_conditions = []
-            for condition in conditions:
-                condition_pattern = r'\{(\w+)\}'
-                condition_variables = re.findall(condition_pattern, condition)
-                new_condition = condition
-                for key, value in params.items():
-                    if key not in condition_variables or value in ('False', 'None'):
-                        continue
-                    if isinstance(value, list):
-                        new_condition = new_condition.replace(f"={{{key}}}", f' = any(array{{{key}}})')
-                    placeholder = f'{{{key}}}'
-                    if placeholder in condition:
-                        if isinstance(value, str):
-                            value = value.split(',')
-                            if len(value) > 1:
-                                new_condition = new_condition.replace(f"={{{key}}}", f' like any(array{{{key}}})')
-                                value = value
-                            else:
-                                value = f"'{value[0]}'"
-                        if isinstance(value, bool):
-                            value = str(value).lower()
-                        new_condition = new_condition.replace(placeholder, str(value))
-                if re.search(r'\{(\w+)\}', new_condition, re.DOTALL):
-                    continue
-                final_conditions.append(new_condition)
-
-            # Tạo phần where mới nếu có điều kiện
-            if final_conditions:
-                where_string = "where " + " and ".join(list(set(final_conditions)))
-            else:
-                where_string = ""
-
-            # Tạo câu SQL cuối cùng
-            final_query = re.sub(r'\{where:\[(.*?)\]\}', where_string, query_string, flags=re.DOTALL)
-            print(final_query)
-            self._cr.execute(final_query)
-            data = [x for x in self._cr.dictfetchall()]
-            return data
-        else:
-            self._cr.execute(query_string)
-            data = [x for x in self._cr.dictfetchall()]
-            return data
+                self._cr.execute(query_string)
+                data = [x for x in self._cr.dictfetchall()]
+                return data
+        except Exception as e:
+            return str(e)
 
 
     def get_excel_file(self, res_model, res_id):
@@ -115,17 +133,22 @@ class LoilvBaseReport(models.AbstractModel):
                 worksheet.write(row_num, col_num, value, formats.get('normal_format'))
 
     def preview_excel_to_html(self, res_model, res_id):
-        record = self.env[res_model].browse(int(res_id))
-        data = self.data_export_excel(record)
-        if not data:
-            return []
-        key_data = list(data[-1].keys())
-        result = [list(d.values()) for d in data]
-        headers = []
-        titles = json.loads(self.env[record.x_res_model].browse(int(record.x_res_id)).title_json)
-        for k in key_data:
-            headers.append(titles.get(k, k))
-        return [headers, result]
+        try:
+            record = self.env[res_model].browse(int(res_id))
+            data = self.data_export_excel(record)
+            if not data:
+                return []
+            if isinstance(data, str):
+                return [[], [data]]
+            key_data = list(data[-1].keys())
+            result = [list(d.values()) for d in data]
+            headers = []
+            titles = json.loads(self.env[record.x_res_model].browse(int(record.x_res_id)).title_json)
+            for k in key_data:
+                headers.append(titles.get(k, k))
+            return [headers, result]
+        except Exception as e:
+            return [[], [str(e)]]
 
     @api.model
     def get_format_workbook(self, workbook):

@@ -1,11 +1,12 @@
 /** @odoo-module **/
 import {FormRenderer} from "@web/views/form/form_renderer";
 import {loadJS} from "@web/core/assets";
+
 const Dialog = require('web.Dialog');
 import {formView} from '@web/views/form/form_view';
 import {registry} from "@web/core/registry"
 
-const {useRef, onPatched, onMounted, useState, onWillStart} = owl;
+const {useRef, onPatched, onMounted, useState, onWillStart, onRendered} = owl;
 
 export class LoilvReportAdvancedRenderer extends FormRenderer {
     setup() {
@@ -17,6 +18,22 @@ export class LoilvReportAdvancedRenderer extends FormRenderer {
         onWillStart(() =>
             loadJS("/loilv_report_advanced/static/src/libs/datatables.min.js")
         );
+
+        onRendered(() => {
+            const table = this.dataTable;
+            if (table) {
+                table.on('click', 'tbody tr', (e) => {
+                    let classList = e.currentTarget.classList;
+
+                    if (classList.contains('active')) {
+                        classList.remove('active');
+                    } else {
+                        table.rows('.active').nodes().each((row) => row.classList.remove('active'));
+                        classList.add('active');
+                    }
+                });
+            }
+        })
     }
 
     async previewData() {
