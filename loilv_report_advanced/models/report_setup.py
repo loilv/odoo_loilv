@@ -103,7 +103,7 @@ class LoiLVReportSetup(models.Model):
         self.action_id = ir_action.id
         return ir_action
 
-    def prepare_value_create_model_report(self):
+    def prepare_data_model(self):
         params = []
         for param in self.setup_params:
             params.append((0, 0, {
@@ -143,20 +143,25 @@ class LoiLVReportSetup(models.Model):
                 'perm_create': _ac.perm_create
 
             }))
+        return params, access
+
+    def prepare_value_create_model_report(self):
+
         return {
             'name': self.name,
             'model': f"x_{self.model_name}",
             'transient': True,
             'state': 'manual',
-            'field_id': params,
-            'access_ids': access
+            'field_id': self.prepare_data_model()[0],
+            'access_ids': self.prepare_data_model()[1]
         }
 
     def confirm(self):
-        self.del_model()
-        report_model = self.env['ir.model'].create(self.prepare_value_create_model_report())
+        self.del_or_update_model()
+        if not self.model_id:
+            report_model = self.env['ir.model'].create(self.prepare_value_create_model_report())
+            self.model_id = report_model.id
         report_view = self.create_view_from_xml()
-        self.model_id = report_model.id
         self.view_id = report_view.id
         action = self.create_action_menu().read()[0]
         return {
@@ -170,13 +175,16 @@ class LoiLVReportSetup(models.Model):
             }
         }
 
-    def del_model(self):
+    def del_or_update_model(self):
         if self.model_id and self.view_id:
             self.env[self.model_id.model].search([]).sudo().unlink()
-            self.action_id.sudo().unlink()
-            self.menu_id.sudo().unlink()
             self.view_id.sudo().unlink()
-            self.model_id.sudo().unlink()
+            self.model_id.sudo().field_id.filtered(lambda x: x.state == 'manual').unlink()
+            self.model_id.sudo().access_ids.unlink()
+            self.model_id.sudo().write({
+                'field_id': self.prepare_data_model()[0],
+                'access_ids': self.prepare_data_model()[1],
+            })
 
     def unlink(self):
         for rec in self:
