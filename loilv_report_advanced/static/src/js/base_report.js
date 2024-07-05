@@ -1,7 +1,6 @@
 /** @odoo-module **/
 import {FormRenderer} from "@web/views/form/form_renderer";
 import {loadJS} from "@web/core/assets";
-
 const Dialog = require('web.Dialog');
 import {formView} from '@web/views/form/form_view';
 import {registry} from "@web/core/registry"

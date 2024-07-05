@@ -157,7 +157,7 @@ class LoiLVReportSetup(models.Model):
         }
 
     def confirm(self):
-        self.del_or_update_model()
+        self.update_model()
         if not self.model_id:
             report_model = self.env['ir.model'].create(self.prepare_value_create_model_report())
             self.model_id = report_model.id
@@ -175,7 +175,7 @@ class LoiLVReportSetup(models.Model):
             }
         }
 
-    def del_or_update_model(self):
+    def update_model(self):
         if self.model_id and self.view_id:
             self.env[self.model_id.model].search([]).sudo().unlink()
             self.view_id.sudo().unlink()
@@ -188,7 +188,12 @@ class LoiLVReportSetup(models.Model):
 
     def unlink(self):
         for rec in self:
-            rec.del_model()
+            if rec.model_id and rec.view_id:
+                self.env[self.model_id.model].search([]).sudo().unlink()
+                rec.action_id.sudo().unlink()
+                rec.menu_id.sudo().unlink()
+                rec.view_id.sudo().unlink()
+                rec.model_id.sudo().unlink()
         return super().unlink()
 
     def view_report(self):
