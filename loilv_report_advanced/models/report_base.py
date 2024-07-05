@@ -25,10 +25,10 @@ class LoilvBaseReport(models.AbstractModel):
                 elif v == 'current_company':
                     params.update({v: self.env.company.id})
                 elif record._fields[f'x_{v}'].type in ('many2one'):
-                    if record[f'x_{v}'].id:
+                    if record[f'x_{v}']:
                         params.update({v: record[f'x_{v}'].id})
                 elif record._fields[f'x_{v}'].type in ('one2many', 'many2many'):
-                    if record[f'x_{v}'].id:
+                    if record[f'x_{v}']:
                         params.update({v: record[f'x_{v}'].ids})
                 elif record._fields[f'x_{v}'].type in ('boolean'):
                     params.update({v: record[f'x_{v}']})
