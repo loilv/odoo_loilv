@@ -71,6 +71,7 @@ export class LoilvReportAdvancedRenderer extends FormRenderer {
                     self.dataTable = $('#table-preview').DataTable({
                         columns: self.headers.data,
                         data: result[1],
+                        pageLength: 50,
                         order: [],
                     });
                 }
