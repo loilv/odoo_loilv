@@ -130,7 +130,15 @@ class LoilvBaseReport(models.AbstractModel):
         # Ghi dữ liệu (các giá trị của dictionary)
         for row_num, entry in enumerate(data, start=3):
             for col_num, (key, value) in enumerate(entry.items()):
-                worksheet.write(row_num, col_num, value, formats.get('normal_format'))
+                try:
+                    if isinstance(value, float):
+                        worksheet.write(row_num, col_num, value, formats.get('float_number_format'))
+                    elif isinstance(value, int):
+                        worksheet.write(row_num, col_num, value, formats.get('int_number_format'))
+                    else:
+                        worksheet.write(row_num, col_num, value, formats.get('normal_format'))
+                except:
+                    worksheet.write(row_num, col_num, value, formats.get('normal_format'))
 
     def preview_excel_to_html(self, res_model, res_id):
         try:

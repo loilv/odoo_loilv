@@ -178,6 +178,8 @@ class LoiLVReportSetup(models.Model):
     def update_model(self):
         if self.model_id and self.view_id:
             self.env[self.model_id.model].search([]).sudo().unlink()
+            self.menu_id.sudo().unlink()
+            self.action_id.sudo().unlink()
             self.view_id.sudo().unlink()
             self.model_id.sudo().field_id.filtered(lambda x: x.state == 'manual').unlink()
             self.model_id.sudo().access_ids.unlink()
