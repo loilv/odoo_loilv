@@ -106,6 +106,8 @@ class LoiLVReportSetup(models.Model):
     def prepare_data_model(self):
         params = []
         for param in self.setup_params:
+            if f"x_{param.name}" in self.model_id.field_id.mapped('name'):
+                continue
             params.append((0, 0, {
                 'name': f"x_{param.name}",
                 'field_description': param.description,
@@ -115,34 +117,36 @@ class LoiLVReportSetup(models.Model):
                 'domain': param.domain,
                 'selection_ids': [(0, 0, {'value': s.name, 'name': s.display}) for s in param.selection_ids]
             }))
-        params += [
-            (0, 0, {
-                'name': f"x_res_id",
-                'field_description': 'Report',
-                'ttype': 'integer',
-            }),
-            (0, 0, {
-                'name': f"x_res_model",
-                'field_description': 'Report',
-                'ttype': 'char',
-            }),
-            (0, 0, {
-                'name': f"x_name",
-                'field_description': 'Name',
-                'ttype': 'char',
-            })
-        ]
+        if not self.model_id:
+            params += [
+                (0, 0, {
+                    'name': f"x_res_id",
+                    'field_description': 'Report',
+                    'ttype': 'integer',
+                }),
+                (0, 0, {
+                    'name': f"x_res_model",
+                    'field_description': 'Report',
+                    'ttype': 'char',
+                }),
+                (0, 0, {
+                    'name': f"x_name",
+                    'field_description': 'Name',
+                    'ttype': 'char',
+                })
+            ]
 
         access = []
-        for _ac in self.access_ids:
-            access.append((0, 0, {
-                'name': _ac.name,
-                'group_id': _ac.group_id.id,
-                'perm_read': _ac.perm_read,
-                'perm_write': _ac.perm_write,
-                'perm_create': _ac.perm_create
+        if not self.access_ids:
+            for _ac in self.access_ids:
+                access.append((0, 0, {
+                    'name': _ac.name,
+                    'group_id': _ac.group_id.id,
+                    'perm_read': _ac.perm_read,
+                    'perm_write': _ac.perm_write,
+                    'perm_create': _ac.perm_create
 
-            }))
+                }))
         return params, access
 
     def prepare_value_create_model_report(self):
@@ -163,7 +167,10 @@ class LoiLVReportSetup(models.Model):
             self.model_id = report_model.id
         report_view = self.create_view_from_xml()
         self.view_id = report_view.id
-        action = self.create_action_menu().read()[0]
+        if not self.action_id:
+            action = self.create_action_menu().read()[0]
+        else:
+            action = self.action_id.read()[0]
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
@@ -177,12 +184,7 @@ class LoiLVReportSetup(models.Model):
 
     def update_model(self):
         if self.model_id and self.view_id:
-            self.env[self.model_id.model].search([]).sudo().unlink()
-            self.menu_id.sudo().unlink()
-            self.action_id.sudo().unlink()
             self.view_id.sudo().unlink()
-            self.model_id.sudo().field_id.filtered(lambda x: x.state == 'manual').unlink()
-            self.model_id.sudo().access_ids.unlink()
             self.model_id.sudo().write({
                 'field_id': self.prepare_data_model()[0],
                 'access_ids': self.prepare_data_model()[1],
