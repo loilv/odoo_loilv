@@ -201,7 +201,10 @@ class LoilvBaseReport(models.AbstractModel):
             'italic': 1,
         })
         int_number_format = {}
-
+        date_format = {
+            'num_format': "dd/mm/yyyy",
+        }
+        date_format.update(normal_format)
         center_format.update({'align': 'center'})
         right_format.update({'align': 'right'})
         float_number_format.update(normal_format)
@@ -244,10 +247,6 @@ class LoilvBaseReport(models.AbstractModel):
         float_number_title_format.set_num_format('#,##0.00')
         int_number_title_format = workbook.add_format(int_number_title_format)
         int_number_title_format.set_num_format('#,##0')
-        date_format = {
-            'num_format': "dd/mm/yyyy",
-        }
-        date_format.update(normal_format)
         date_format = workbook.add_format(date_format)
 
         return {
