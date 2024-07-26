@@ -1,4 +1,5 @@
 import copy
+from datetime import date, datetime
 
 import xlsxwriter
 from odoo import fields, api, models
@@ -92,12 +93,10 @@ class LoilvBaseReport(models.AbstractModel):
                 data = [x for x in self._cr.dictfetchall()]
                 return data
             else:
-                self._cr.execute(query_string)
-                data = [x for x in self._cr.dictfetchall()]
+                data = self.env['res.utility'].execute_postgresql(query=query_string, param=[], build_dict=True)
                 return data
         except Exception as e:
             return str(e)
-
 
     def get_excel_file(self, res_model, res_id):
         record = self.env[res_model].browse(int(res_id))
@@ -135,6 +134,10 @@ class LoilvBaseReport(models.AbstractModel):
                         worksheet.write(row_num, col_num, value, formats.get('float_number_format'))
                     elif isinstance(value, int):
                         worksheet.write(row_num, col_num, value, formats.get('int_number_format'))
+                    elif isinstance(value, date):
+                        worksheet.write(row_num, col_num, value, formats.get('date_format'))
+                    elif isinstance(value, datetime):
+                        worksheet.write(row_num, col_num, value, formats.get('datetime_format'))
                     else:
                         worksheet.write(row_num, col_num, value, formats.get('normal_format'))
                 except:
@@ -241,11 +244,17 @@ class LoilvBaseReport(models.AbstractModel):
         float_number_title_format.set_num_format('#,##0.00')
         int_number_title_format = workbook.add_format(int_number_title_format)
         int_number_title_format.set_num_format('#,##0')
+        date_format = {
+            'num_format': "dd/mm/yyyy",
+        }
+        date_format.update(normal_format)
+        date_format = workbook.add_format(date_format)
 
         return {
             'header_format': header_format,
             'title_format': title_format,
             'datetime_format': datetime_format,
+            'date_format': date_format,
             'normal_format': normal_format,
             'italic_format': italic_format,
             'center_format': center_format,
