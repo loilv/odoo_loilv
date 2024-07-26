@@ -137,7 +137,7 @@ class LoiLVReportSetup(models.Model):
             ]
 
         access = []
-        if not self.access_ids:
+        if not self.model_id.access_ids:
             for _ac in self.access_ids:
                 access.append((0, 0, {
                     'name': _ac.name,
