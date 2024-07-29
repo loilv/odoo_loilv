@@ -115,6 +115,9 @@ class LoiLVReportSetup(models.Model):
                 'required': param.required,
                 'relation': param.relation,
                 'domain': param.domain,
+                'relation_table': param.many2many_model,
+                'column1': param.column_1,
+                'column2': param.column_2,
                 'selection_ids': [(0, 0, {'value': s.name, 'name': s.display}) for s in param.selection_ids]
             }))
         if not self.model_id:
