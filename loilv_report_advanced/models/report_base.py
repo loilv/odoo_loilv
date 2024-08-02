@@ -66,7 +66,7 @@ class LoilvBaseReport(models.AbstractModel):
                                     if isinstance(value, str):
                                         value = value.split(',')
                                         if len(value) > 1:
-                                            new_condition = new_condition.replace(f"={{{key}}}", f' like any(array{{{key}}})')
+                                            new_condition = new_condition.replace(f"='{{{key}}}'", f' like any(array{{{key}}})')
                                             value = value
                                         else:
                                             value = f"{value[0]}"
@@ -127,7 +127,17 @@ class LoilvBaseReport(models.AbstractModel):
         for col_num, header in enumerate(headers):
             worksheet.write(2, col_num, titles.get(header, header), formats.get('title_format'))
         # Ghi dữ liệu (các giá trị của dictionary)
+        max_record = 500000
         for row_num, entry in enumerate(data, start=3):
+            if row_num == max_record:
+                worksheet = workbook.add_worksheet(config_report.name)
+                worksheet.set_row(0, 25)
+                worksheet.set_row(4, 30)
+                worksheet.write(0, 0, record._description, formats.get('header_format'))
+                headers = list(data[-1].keys())
+                for col_num, header in enumerate(headers):
+                    worksheet.write(2, col_num, titles.get(header, header), formats.get('title_format'))
+
             for col_num, (key, value) in enumerate(entry.items()):
                 try:
                     if isinstance(value, float):
