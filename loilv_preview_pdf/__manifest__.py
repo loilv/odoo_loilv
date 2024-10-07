@@ -4,6 +4,8 @@
     'category': 'Tools',
     'summary': 'Preview PDF using window.print without opening a new tab',
     'depends': ['web'],
+    'author': "loilv",
+    'website': "loilv.295@gmail.com",
     'data': [],
     'assets': {
         'web.assets_backend': [
